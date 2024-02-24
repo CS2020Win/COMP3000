@@ -1,0 +1,86 @@
+COMP 3000 2022F Assignment 4
+Name: Tianyang Zhao
+Student ID: 101118795
+
+Collaborators:
+
+1. compile the program with ‘make’ command.
+
+2. When using ‘cat /dev/procreport’ command, the ‘procreport’ device is read, and the ‘funcion procreport_read’ function is called and in this function ‘put_user’ function is called to print out the message ‘Your PID ….’
+
+3. Run the bpftrace script first and then run the dd command. We can see that dd command’s output is the same with cat, that is, Your PID … is printed out. This means that dd command also read the /dev/procreport device.
+
+As for another terminal, we can see the output is ‘open’, ‘read’, ‘get_physical’, ‘read’,  ‘release’ is called. This means those functions are called in sequence. We can check the source code to find out what those functions done. Those functions are defined in watch_procreport.bt. It seems that btftrace command will load the file at the first argument and do the specific operations when the kernel module reached the functions. This can be used to debug a kernel module.
+
+4. When this dd command is called, we got a blocked terminal and the command doesn’t returned as expected. Then I tried those operations and recorded the corresponding response. 
+
+Command dd if=/dev/procreport seek=0 bs=1024 count=30 output is response directly as expected.
+
+Command dd if=/dev/procreport seek=1 bs=1024 count=30 output is blocked unexpected.
+
+Command dd if=/dev/procreport seek=0 bs=1024 count=1 output is response directly as expected. 
+
+
+And from the output of btftrace command, we can see that when dd command set seek to numbers larger than 0, the read function isn’t called and blocked.
+
+5. put_user is used for kernel module to copy some information from kernel space to user space. That is, if a kernel module want to send some information to a normal user’s buffer, put_user function should be called to do so. The first argument is src buffer(kernel space) and the second is destination buffer(user space). However, this function seems to work only on single byte. So the loop function is used to copy the whole message one by one.
+
+6. put_user function is used to copy data from kernel space to user space. The put_user function call on line 111 is used to copy a ‘0’ byte to buf. Then the function ‘procreport_get_physical’ is called to get physical memory location. 
+
+7. This seems to be a demo project of kernel module. The function get_zeroed_page is used to allocate a memory space in kernel mode and empty the allocated memory space. free_page is used to free the allocated page. If get_zeroed_page is missed, all the memory space is stack based memory and after the function returns, all data on stack may be covered and are not expected to be available for other function calls. If free function is missing, the allocated memory will not be freed and if the whole memory space is allocated, no new space can be assigned and the request for a new memory space may be blocked.
+
+8. Change procreport_open function to this:
+
+static int procreport_open(struct inode *the_inode, struct file *f)
+{
+        // printout pid.
+        int cpid=0, ppid=0;
+
+        struct task_struct *t, *prev;
+        struct list_head* list;
+
+        cpid = task_pid_nr(current);
+
+        printk( KERN_DEBUG "start open.");
+        printk( KERN_DEBUG "current pid: %d\n", cpid);
+
+        t = current;
+
+        int count = 0;
+
+        do {
+            prev = t;
+            t = t->parent;
+            cpid = prev->pid;
+            ppid = t->pid;
+            printk("%d's parent is %d\n", cpid, ppid);
+            count += 1;
+            if (count==10){
+                break;
+            }
+        } while (prev->pid != 0);  
+        
+        return 0;
+}
+
+9. A: Linux using fource page paging model and the paging unit is part of Memory Management Unit which converts a linear address into a physical address. If we want to translate virutal memeory address to phisical memory address, we should do some calculation from one page to another. This is done in the function procreport_get_physical:
+
+The input argument addr is the virtual memory address value, on the line 40 to 44 page structure pointers are defined as pgd, p4d, pud, pmd, pte.
+
+Calculate the linear address pgd of the page global catalog entry by pgd_offset, passing in the memory descriptor mm and the linear address addr. 
+Calculate the linear address pud of the page parent directory entry by pud_offset, passing the parameters to the linear address pgd of the page global directory entry and the linear address addr. 
+Calculate the linear address pmd of the page middle directory entry through pmd_offset, passing the parameters to the linear address pud and the linear address addr of the parent directory entry. 
+Pte_offset_kernel pte_offset_kernel calculated by the linear address pte, the parameters for the middle of the directory entry of the linear address pmd linear address and address addr. 
+pte_val (* pte) to remove the page table entries, and PAGE_MASK phase and the result is to access the page's physical address; addr & ~ PAGE_MASK used to get linear address offset field; the two or the final physical address calculation.
+return the physical address calculated.
+
+Then we can execute the dd command again and see the results.
+
+root@ubuntu:/home/test/c3000/c3000procreport# dd if=/dev/procreport seek=0 bs=1024  count=1
+Your PID is 36672!
+Buffer at 0x000055f5dc501000 virtual is at 0x00000001fb175000 physical.
+0+1 records in
+0+1 records out
+92 bytes copied, 3.161e-05 s, 2.9 MB/s
+
+

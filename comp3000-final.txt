@@ -1,0 +1,144 @@
+COMP 3000 2022F Final Exam
+Name: Tianyang Zhao
+Student ID: 101118795
+
+
+Collaborators:
+
+1.
+The signal handler in 3000shell2.c would be called when the process receives a signal.   It is not necessarily expected to happen often, as it depends on the signals that the process is configured to handle and the circumstances under which those signals are sent.
+
+2.
+It is not expected to generally see fork system calls when stracing processes on the class VM.  The fork system call is used to create a new process by duplicating the current process.  In the class VM, it is not common for processes to create new child processes using fork.  Instead, processes may create new threads using the clone system call.
+
+3.
+The available internal commands for a shell are determined by the shell itself.  
+The available external commands for a shell are determined by the programs and executables that are installed on the system. 
+
+4a.Can change how file paths are interpreted: chroot
+
+4b.Can change the PID's associated with processes: neither
+
+4c.Creates persistent files: neither
+
+4d. Can change how UID's are interpreted: neither
+
+4e.execve's a new executable: execve
+
+5.
+The parent process can retrieve the PID of the child process by calling the waitpid function or by using the getpid and getppid functions.
+
+6.
+There is a potential risk in running sudo busybox --install on the class VM or any other system, as it may overwrite or conflict with existing utilities or libraries and may give the user more privileges or permissions. 
+
+7a.Yes
+
+7b.Two write system calls were needed to create file1.
+
+7c.The mount command requires root privileges, as it is used to mount a filesystem and this operation requires access to system resources and requires special privileges.
+
+7d.File1 is stored in the filesystem on the device /dev/sda2, as it is created in the current directory before the mount command is run.  File2 is stored in the filesystem on the file myimage, as it is created after the mount command is run and the file myimage is mounted at the mp directory.
+
+7e.The creation of file1 will increase the amount of data stored in /dev/sda2 by the size of the file, which is determined by the block size and number of blocks specified in the dd command.  The creation of file2 will also increase the amount of data stored in myimage by the size of the file, but it will not affect the amount of data stored in /dev/sda2, as myimage is a separate filesystem that is mounted at the mp directory.
+
+8a.The call instruction is used to call a function in x86-64 assembly language.
+8b.The syscall instruction is used to make a system call in x86-64 assembly language.
+
+9.
+Outputting a message to standard error after a call to execve serves to inform the user that the execve system call has failed and to provide information about the cause of the failure.
+
+10a.1025 bytes can be read from X.
+
+10b.The file uses 2 data blocks on disk.
+
+10c.The logical size of the file is larger.
+
+10d.Yes.
+
+11.
+nano needs access to the files in the /lib/terminfo directory to function properly because it uses the terminfo database to determine the capabilities of the terminal it is running in.  Bash, on the other hand, does not need access to these files because it relies on the terminal emulator to handle the display of text and does not need to access the terminfo database to determine the terminal's capabilities.
+
+12a. It is generally not possible for an account that is in the shadow group but has no extra privileges to validate passwords without having extra privileges.  
+Normally, only the root user or a user with appropriate privileges can access the shadow group and the password hashes it contains.  An account that is in the shadow group but has no extra privileges does not have access to these password hashes and cannot validate passwords.
+
+12b.An account that is in the shadow group but has no extra privileges typically does not have the ability to delete another user account.  Only the root user or a user with appropriate privileges can delete user accounts, as this operation requires access to system resources and requires special privileges.  An account that is in the shadow group but has no extra privileges does not have these privileges and cannot delete another user account.
+
+13.
+It is generally not safe to give full access to system devices in a confined environment because it could potentially allow a program or user to access and modify sensitive system resources, potentially leading to security vulnerabilities or system instability.  It is important to carefully control access to system devices and to only grant access to trusted programs and users.
+
+14a.printf: No
+
+14b. snprintf: No
+
+14c.put_user: Yes
+
+14d.getpid: Yes
+
+15.
+The c3000procreport module does not run continuously until it is unloaded.  Its code is only executed when the module is accessed through its device file or when certain functions or symbols exported by the module are called.
+
+16.
+The current pointer in the kernel source contains a virtual address, not a physical address.  It points to a location in kernel space and is used to refer to the task structure of the task that made the system call that the kernel is currently handling.
+
+17a.Yes
+
+17b.Yes
+
+17c.Yes
+
+18.
+When /dev/procreport is closed, the function procreport_release in c3000procreport.c is called.  This can be confirmed by looking at the file_operations structure in the same file, which specifies the release field as procreport_release.
+
+19.
+Before writing data to a userspace pointer, a kernel module must:
+Validate the pointer to ensure it points to a valid memory address in userspace.  This can be done using the access_ok function.
+
+Use a function such as copy_to_user or put_user to copy the data from kernel space to userspace.  
+
+If these steps are not taken, the kernel module may cause a segmentation fault or other memory access violation, resulting in a crash of the system.  This could potentially lead to data loss or corruption if not handled properly.
+
+20.
+One function we can use to dynamically allocate memory in a kernel module is kmalloc.  This function is used to allocate memory in the kernel heap and is similar to the malloc function in userspace.
+We cannot use malloc in a kernel module because it is a userspace function and is not available in kernel space. In addition, the kernel has a different memory management system than userspace, so using a userspace function like malloc may not be appropriate for allocating memory in the kernel.
+
+21.
+The process whose parent is always itself is the "init" process, also known as "process ID 1" or "PID 1". This process is special in that it is the first process that is created when the system boots up, and it is responsible for starting and managing other processes on the system.
+
+22.
+The Linux kernel supports four levels of page tables on x86-64 architecture.This is specified in the kernel source code in the file include/asm-x86/pgtable_64.h.Specifically, the kernel uses pgd_t, p4d_t, pud_t, and pmd_t data types to represent the page global directory, four-level page table directory, two-level page upper directory, and two-level page middle directory, respectively. 
+
+23.
+The following C code could have generated the assembly language code:
+
+const char *animals[] = {"alpha", "beta", "gamma", NULL};
+
+The ". LC0", ". LC1", and ". LC2" labels correspond to the strings "alpha", "beta", and "gamma", respectively.  The "animals" label corresponds to an array of pointers to these strings, with the array being terminated by a NULL pointer.  The ". quad" directives are used to allocate space for each element in the array, which in this case are pointers to the strings.
+
+24a.This assembly code implements the part of the C code that compares the value of "g" with "the_number" and outputs a message depending on the result of the comparison.
+
+24b.The compiler could not have replaced the reference to "the_number" with the number 42, because "the_number" is a global variable and its value may change during the execution of the program.  The assembly code uses the "movl" instruction to load the value of "the_number" from memory into the register %eax, and then compares it with the value in %edi using the "cmpl" instruction.  If the value in %edi is greater than the value in %eax, the code jumps to the label .L6;  if it is greater than or equal to the value in %eax, the code jumps to the label .L4;  otherwise, it continues to the next instruction.
+
+25.
+C code:
+#include <unistd.h>
+
+int main(int argc, char** argv) {
+    char* args[] = {"/bin/ls", "-1", "/home", NULL};
+    execve(args[0], args, environ);
+    return 0;
+}
+
+This will execute the ls command with the -1 option and the /home argument.  The environ variable is used to pass the current environment to the new process.  The NULL at the end of the args array indicates the end of the list of arguments.
+
+26.
+To make a program setuid to the user "student", you would need to change the owner of the program to "student" and set the setuid bit on the program. This can be done using the chown and chmod commands, respectively. For example:
+sudo chown student myprogram
+sudo chmod u+s myprogram
+
+27.
+If 3000shell2 is setuid root, it will have root privileges whenever it is executed. It will not give up these privileges unless it explicitly drops them through a system call or library function such as seteuid or setreuid.
+
+The security implications of this depend on the behavior of 3000shell2. If it is well-written and properly checks the privileges it has before performing sensitive operations, then it should not pose a significant security risk. However, if it has vulnerabilities that allow an attacker to execute arbitrary code with its privileges, then it could potentially be used to gain unauthorized access to the system.
+
+28.
+In bash, if type "ls > logfile", the shell (bash) will create a file called logfile and redirect the output of the ls command to it. The shell will then close the logfile after the ls command has completed executing. This is because the shell is responsible for creating and opening the logfile, and it is also responsible for closing it after the command has finished executing. The ls command itself does not have the ability to open or close files, as it is simply a command that lists the contents of a directory.
