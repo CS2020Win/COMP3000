@@ -1,6 +1,4 @@
-COMP 3000 2022F Assignment 3
-Name: Tianyang Zhao
-Student ID: 101118795
+
 
 Collaborators:
 
